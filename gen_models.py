@@ -6,20 +6,12 @@ import torch.nn as nn
 from tqdm import tqdm
 
 
-from copy import deepcopy
 import torch_geometric.transforms as T
-from torch_geometric.nn import GCNConv, SAGEConv
-from torch_sparse import SparseTensor
-from torch_geometric.utils import to_undirected
-import numpy as np
 
 
-from ogb.nodeproppred import PygNodePropPredDataset, Evaluator
+from ogb.nodeproppred import PygNodePropPredDataset, Evaluator, DglNodePropPredDataset
 from outcome_correlation import prepare_folder
 from diffusion_feature import preprocess
-import glob
-import os
-import shutil
 
 from logger import Logger
 
@@ -138,6 +130,8 @@ def main():
     
     x = data.x
 
+    dataset2 = DglNodePropPredDataset(name=f'ogbn-{args.dataset}')
+    hhh, xxx = dataset2[0]
     
     split_idx = dataset.get_idx_split()
     preprocess_data = PygNodePropPredDataset(name=f'ogbn-{args.dataset}')[0]

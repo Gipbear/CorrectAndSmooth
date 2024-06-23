@@ -3,16 +3,12 @@ from tqdm import tqdm
 import torch
 import torch.nn.functional as F
 from torch_sparse import SparseTensor
-from torch_geometric.utils import to_undirected, dropout_adj
-from torch_geometric.data import Data
+from torch_geometric.utils import to_undirected
 
 from copy import deepcopy
 import numpy as np
 from scipy import sparse
-from torch_scatter import scatter
 
-import h5py
-import os
 
 import numpy as np
 np.random.seed(0)

@@ -1,26 +1,14 @@
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
-import argparse
 import os
 from collections import defaultdict
-import glob
 
-
-
-from copy import deepcopy
 from torch_sparse import SparseTensor
 from torch_geometric.utils import to_undirected
-import numpy as np
-from ogb.nodeproppred import PygNodePropPredDataset, Evaluator
-import optuna
 
 from logger import Logger
-import random
 import shutil
-import glob
-from collections.abc import Iterable
-import joblib
 
 
 
@@ -157,7 +145,8 @@ def pre_outcome_correlation(labels, model_out, label_idx):
     
     return y
 
-def general_outcome_correlation(adj, y, alpha, num_propagations, post_step, alpha_term, device='cuda', display=True):
+def general_outcome_correlation(adj, y, alpha, num_propagations, post_step, alpha_term, display=True):
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     """general outcome correlation. alpha_term = True for outcome correlation, alpha_term = False for residual correlation"""
     adj = adj.to(device)
     orig_device = y.device
