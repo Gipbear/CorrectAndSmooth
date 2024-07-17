@@ -6,8 +6,8 @@ from outcome_correlation import *
 
 def main():
     parser = argparse.ArgumentParser(description='Outcome Correlations)')
-    parser.add_argument('--dataset', type=str)
-    parser.add_argument('--method', type=str)
+    parser.add_argument('--dataset', type=str, default="arxiv")
+    parser.add_argument('--method', type=str, default="lp")
     args = parser.parse_args()
     
     dataset = PygNodePropPredDataset(name=f'ogbn-{args.dataset}')

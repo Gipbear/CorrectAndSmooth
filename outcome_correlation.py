@@ -63,6 +63,7 @@ class SimpleLogger(object):
             print()
 
 def process_adj(data):
+    """计算得到邻接矩阵和度矩阵"""
     N = data.num_nodes
     data.edge_index = to_undirected(data.edge_index, data.num_nodes)
 
@@ -75,9 +76,9 @@ def process_adj(data):
     return adj, deg_inv_sqrt
 
 def gen_normalized_adjs(adj, D_isqrt):
-    DAD = D_isqrt.view(-1,1)*adj*D_isqrt.view(1,-1)
-    DA = D_isqrt.view(-1,1) * D_isqrt.view(-1,1)*adj
-    AD = adj*D_isqrt.view(1,-1) * D_isqrt.view(1,-1)
+    DAD = D_isqrt.view(-1,1)*adj*D_isqrt.view(1,-1)  # [n, 1] [n, n] [1, n] 对称归一化 sym
+    DA = D_isqrt.view(-1,1) * D_isqrt.view(-1,1)*adj  # DA 随机游走(传播)
+    AD = adj*D_isqrt.view(1,-1) * D_isqrt.view(1,-1)  # AD 与随机游走相（聚合）# !待验证
     return DAD, DA, AD
 
 def gen_normalized_adj(adj, pw): # pw = 0 is D^-1A, pw=1 is AD^-1
@@ -107,6 +108,7 @@ def model_load(file, device='cpu'):
         return result, run
 
 def get_labels_from_name(labels, split_idx):
+    """根据 split_idx 获取训练集还是测试集的标签"""
     if isinstance(labels, list):
         labels = list(labels)
         if len(labels) == 0:
@@ -182,8 +184,9 @@ def double_correlation_autoscale(data, model_out, split_idx, A1, alpha1, num_pro
         residual_idx = label_idx
 
         
+    # 初始化误差 label - pre_y，并对误差进行 LP 传播
     y = pre_residual_correlation(labels=data.y.data, model_out=model_out, label_idx=residual_idx)
-    resid = general_outcome_correlation(adj=A1, y=y, alpha=alpha1, num_propagations=num_propagations1, post_step=lambda x: torch.clamp(x, -1.0, 1.0), alpha_term=True, display=display, device=device)
+    resid = general_outcome_correlation(adj=A1, y=y, alpha=alpha1, num_propagations=num_propagations1, post_step=lambda x: torch.clamp(x, -1.0, 1.0), alpha_term=True, display=display)
 
     orig_diff = y[residual_idx].abs().sum()/residual_idx.shape[0]
     resid_scale = (orig_diff/resid.abs().sum(dim=1, keepdim=True))
@@ -192,8 +195,9 @@ def double_correlation_autoscale(data, model_out, split_idx, A1, alpha1, num_pro
     resid_scale[cur_idxs] = 1.0
     res_result = model_out + resid_scale*resid
     res_result[res_result.isnan()] = model_out[res_result.isnan()]
+    # 用模型结果初始化标签，并对标签进行 LP 传播
     y = pre_outcome_correlation(labels=data.y.data, model_out=res_result, label_idx = label_idx)
-    result = general_outcome_correlation(adj=A2, y=y, alpha=alpha2, num_propagations=num_propagations2, post_step=lambda x: torch.clamp(x, 0,1), alpha_term=True, display=display, device=device)
+    result = general_outcome_correlation(adj=A2, y=y, alpha=alpha2, num_propagations=num_propagations2, post_step=lambda x: torch.clamp(x, 0,1), alpha_term=True, display=display)
     
     return res_result, result
 
